@@ -20,6 +20,7 @@ public class NumberText extends JTextField implements EventListener {
 
     public NumberText(final Space space) {
         this.space = space;
+
         var dimension = new Dimension(50, 50);
         this.setSize(dimension);
         this.setPreferredSize(dimension);
@@ -27,18 +28,22 @@ public class NumberText extends JTextField implements EventListener {
         this.setFont(new Font("Arial", PLAIN, 20));
         this.setHorizontalAlignment(CENTER);
         this.setDocument(new NumberTextLimit());
-        this.setEnabled(!space.isFixed());
+        this.setEditable(!space.isFixed());
 
+
+        // ✅ Exibe valor esperado para espaços fixos
         if (space.isFixed()) {
-            this.setText(space.getActual().toString());
+            this.setText(String.valueOf(space.getExpected()));
             this.setBackground(Color.LIGHT_GRAY);
         } else {
             this.setText(space.getActual() != null ? space.getActual().toString() : "");
             this.setBackground(Color.WHITE);
         }
 
-        this.getDocument().addDocumentListener(new DocumentListener() {
+        // 🔍 Diagnóstico visual no terminal
+        System.out.println("Campo criado → expected=" + space.getExpected() + ", actual=" + space.getActual() + ", fixed=" + space.isFixed());
 
+        this.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(final DocumentEvent e) {
                 changeSpace();

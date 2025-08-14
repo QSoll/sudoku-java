@@ -42,7 +42,7 @@ public class Board {
         for (int row = 0; row < 9; row++) {
             Set<Integer> seen = new HashSet<>();
             for (int col = 0; col < 9; col++) {
-                Integer value = spaces.get(col).get(row).getActual();
+                Integer value = spaces.get(row).get(col).getActual();
                 if (value != null) {
                     if (seen.contains(value))
                         return true;
@@ -57,7 +57,7 @@ public class Board {
         for (int col = 0; col < 9; col++) {
             Set<Integer> seen = new HashSet<>();
             for (int row = 0; row < 9; row++) {
-                Integer value = spaces.get(col).get(row).getActual();
+                Integer value = spaces.get(row).get(col).getActual();
                 if (value != null) {
                     if (seen.contains(value))
                         return true;
@@ -76,7 +76,7 @@ public class Board {
                     for (int col = 0; col < 3; col++) {
                         int x = blockCol * 3 + col;
                         int y = blockRow * 3 + row;
-                        Integer value = spaces.get(x).get(y).getActual();
+                        Integer value = spaces.get(y).get(x).getActual();
                         if (value != null) {
                             if (seen.contains(value))
                                 return true;
@@ -91,7 +91,7 @@ public class Board {
 
     // Retorna os valores possíveis para uma célula
     public Set<Integer> getHints(final int col, final int row) {
-        var space = spaces.get(col).get(row);
+        var space = spaces.get(row).get(col);
         if (space.isFixed()) {
             return Set.of(); // Sem dicas para células fixas
         }
@@ -103,14 +103,14 @@ public class Board {
 
         // Verifica linha
         for (int c = 0; c < 9; c++) {
-            Integer value = spaces.get(c).get(row).getActual();
+            Integer value = spaces.get(row).get(c).getActual();
             if (value != null)
                 used.add(value);
         }
 
         // Verifica coluna
         for (int r = 0; r < 9; r++) {
-            Integer value = spaces.get(col).get(r).getActual();
+            Integer value = spaces.get(r).get(col).getActual();
             if (value != null)
                 used.add(value);
         }
@@ -120,7 +120,7 @@ public class Board {
         int blockRow = (row / 3) * 3;
         for (int r = 0; r < 3; r++) {
             for (int c = 0; c < 3; c++) {
-                Integer value = spaces.get(blockCol + c).get(blockRow + r).getActual();
+                Integer value = spaces.get(blockRow + r).get(blockCol + c).getActual();
                 if (value != null)
                     used.add(value);
             }
@@ -139,19 +139,16 @@ public class Board {
 
     // Altera valor de uma célula, se permitido
     public boolean changeValue(final int col, final int row, final int value) {
-        var space = spaces.get(col).get(row);
+        var space = spaces.get(row).get(col);
 
-        // Não permite alterar células fixas
         if (space.isFixed()) {
             return false;
         }
 
-        // Não permite alterar células já preenchidas
         if (space.getActual() != null) {
             return false;
         }
 
-        // Verifica se o valor é válido para essa posição
         Set<Integer> hints = getHints(col, row);
         if (!hints.contains(value)) {
             return false;
@@ -162,7 +159,7 @@ public class Board {
     }
 
     public boolean clearValue(final int col, final int row) {
-        var space = spaces.get(col).get(row);
+        var space = spaces.get(row).get(col);
         if (space.isFixed()) {
             return false;
         }
@@ -172,7 +169,7 @@ public class Board {
     }
 
     public void reset() {
-        spaces.forEach(c -> c.forEach(Space::clearSpace));
+        spaces.forEach(row -> row.forEach(Space::clearSpace));
     }
 
     public boolean gameIsFinished() {

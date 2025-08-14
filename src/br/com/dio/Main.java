@@ -18,6 +18,9 @@ public class Main {
 
     private final static Scanner scanner = new Scanner(System.in);
     private static Board board;
+
+    private static int moveCount = 0;
+
     private final static int BOARD_LIMIT = 9;
 
     public static void main(String[] args) throws IOException {
@@ -111,18 +114,22 @@ public class Main {
 
     private static void inputNumber() {
         if (isNull(board)) {
-            System.out.println("O jogo ainda não foi iniciado iniciado");
+            System.out.println("O jogo ainda não foi iniciado");
             return;
         }
 
-        System.out.println("Informe a coluna que em que o número será inserido");
+        System.out.println("Informe a coluna em que o número será inserido");
         var col = runUntilGetValidNumber(0, 8);
-        System.out.println("Informe a linha que em que o número será inserido");
+        System.out.println("Informe a linha em que o número será inserido");
         var row = runUntilGetValidNumber(0, 8);
         System.out.printf("Informe o número que vai entrar na posição [%s,%s]\n", col, row);
         var value = runUntilGetValidNumber(1, 9);
+
         if (!board.changeValue(col, row, value)) {
             System.out.printf("A posição [%s,%s] tem um valor fixo\n", col, row);
+        } else {
+            moveCount++; // 👈 Incrementa o contador
+            System.out.println("Jogada registrada. Total de jogadas: " + moveCount);
         }
     }
 
@@ -150,7 +157,9 @@ public class Main {
         }
 
         board.clearValue(col, row);
+        moveCount++; // 👈 Aqui incrementa o contador
         System.out.printf("Número removido da posição [%s,%s].\n", col, row);
+        System.out.println("Jogada registrada. Total de jogadas: " + moveCount);
     }
 
     private static void showCurrentGame() {

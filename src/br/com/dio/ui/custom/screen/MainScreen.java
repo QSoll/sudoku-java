@@ -21,7 +21,9 @@ import static javax.swing.JOptionPane.*;
 
 public class MainScreen {
 
-    private final int timeLimitSeconds = 300; // 5 minutos
+  
+
+    private final int timeLimitSeconds = -1; // ilimitado
     private final static Dimension dimension = new Dimension(600, 600);
 
     private final BoardService boardService;
@@ -30,7 +32,7 @@ public class MainScreen {
     private JButton checkGameStatusButton;
     private JButton finishGameButton;
     private JButton resetButton;
-    private JButton hintButton;
+    //private JButton hintButton;
     private JButton pauseButton;
     private JButton undoButton;
 
@@ -38,39 +40,46 @@ public class MainScreen {
     private Timer gameTimer;
     private int elapsedSeconds = 0;
     private boolean isPaused = false;
-    private int hintsRemaining = 3;
+    
+
+    private long startTimeMillis;
 
     public MainScreen(final Map<String, String> gameConfig) {
+
         this.boardService = new BoardService(gameConfig);
         this.notifierService = new NotifierService();
     }
 
     public void buildMainScreen() {
+
+        
+
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setPreferredSize(dimension);
         JFrame mainFrame = new MainFrame(dimension, mainPanel);
-
-        // ⏱️ Cronômetro regressivo no topo
-        timerLabel = new JLabel("Tempo restante: 05:00");
-        timerLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        timerLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        mainPanel.add(timerLabel, BorderLayout.NORTH);
-
-        elapsedSeconds = timeLimitSeconds;
-
-        gameTimer = new Timer(1000, __ -> {
-            elapsedSeconds--;
-            int minutes = elapsedSeconds / 60;
-            int seconds = elapsedSeconds % 60;
-            timerLabel.setText(String.format("Tempo restante: %02d:%02d", minutes, seconds));
-
-            if (elapsedSeconds <= 0) {
-                gameTimer.stop();
-                disableGame();
-                JOptionPane.showMessageDialog(null, "⏳ Tempo esgotado! Você perdeu o desafio.");
-            }
-        });
-        gameTimer.start();
+        /*
+         * // ⏱️ Cronômetro regressivo no topo
+         * timerLabel = new JLabel("Tempo restante: 05:00");
+         * timerLabel.setFont(new Font("Arial", Font.BOLD, 16));
+         * timerLabel.setHorizontalAlignment(SwingConstants.CENTER);
+         * mainPanel.add(timerLabel, BorderLayout.NORTH);
+         * 
+         * 
+         * elapsedSeconds = timeLimitSeconds;
+         * 
+         * gameTimer = new Timer(1000, __ -> {
+         * elapsedSeconds--;
+         * timerLabel.setText("Tempo restante: " + formatTime(elapsedSeconds));
+         * 
+         * if (elapsedSeconds <= 0) {
+         * gameTimer.stop();
+         * disableGame();
+         * JOptionPane.showMessageDialog(null,
+         * "⏳ Tempo esgotado! Você perdeu o desafio.");
+         * }
+         * });
+         * gameTimer.start();
+         */
 
         // 🧩 Setores do Sudoku no centro
         JPanel sectorsPanel = new JPanel(new GridLayout(3, 3));
@@ -89,21 +98,24 @@ public class MainScreen {
         addResetButton(mainPanel);
         addCheckGameStatusButton(mainPanel);
         addFinishGameButton(mainPanel);
-        addHintButton(mainPanel);
+        
         addPauseButton(mainPanel);
         addUndoButton(mainPanel);
 
-        JPanel buttonPanel = new JPanel();
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER)); // ✅ centralizado
         buttonPanel.add(resetButton);
         buttonPanel.add(checkGameStatusButton);
         buttonPanel.add(finishGameButton);
-        buttonPanel.add(hintButton);
+        
         buttonPanel.add(pauseButton);
         buttonPanel.add(undoButton);
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
 
         mainFrame.revalidate();
         mainFrame.repaint();
+        startTimeMillis = System.currentTimeMillis();
+
+        mainFrame.setVisible(true); // ✅ Correção adicionada
     }
 
     private List<Space> getSpacesFromSector(final List<List<Space>> spaces,
@@ -112,29 +124,28 @@ public class MainScreen {
         List<Space> spaceSector = new ArrayList<>();
         for (int r = initRow; r <= endRow; r++) {
             for (int c = initCol; c <= endCol; c++) {
-                spaceSector.add(spaces.get(c).get(r));
+                spaceSector.add(spaces.get(r).get(c)); // ✅ linha → coluna
             }
         }
         return spaceSector;
     }
 
     private JPanel generateSection(final List<Space> spaces) {
-        List<NumberText> fields = new ArrayList<>(spaces.stream().map(NumberText::new).toList());
-        fields.forEach(t -> notifierService.subscribe(EventEnum.CLEAR_SPACE
-, t));
+        List<NumberText> fields = new ArrayList<>();
+        spaces.forEach(space -> fields.add(new NumberText(space)));
+        fields.forEach(t -> notifierService.subscribe(EventEnum.CLEAR_SPACE, t));
         return new SudokuSector(fields);
     }
 
     private void addFinishGameButton(final JPanel mainPanel) {
         finishGameButton = new FinishGameButton(__ -> {
             if (boardService.gameIsFinished()) {
-                gameTimer.stop();
-                showMessageDialog(null, "Parabéns você concluiu o jogo em " + timerLabel.getText());
+                showMessageDialog(null, "🎉 Parabéns! Você concluiu o jogo!");
                 disableGame();
             } else {
-                var message = "Seu jogo tem alguma inconsistência, ajuste e tente novamente";
-                showMessageDialog(null, message);
+                showMessageDialog(null, "⚠️ Seu jogo tem alguma inconsistência. Ajuste e tente novamente.");
             }
+
         });
     }
 
@@ -144,7 +155,7 @@ public class MainScreen {
             var gameStatus = boardService.getStatus();
             var message = switch (gameStatus) {
                 case NON_STARTED -> "O jogo não foi iniciado";
-                case INCOMPLETE -> "O jogo está imcompleto";
+                case INCOMPLETE -> "O jogo está incompleto";
                 case COMPLETE -> "O jogo está completo";
             };
             message += hasErrors ? " e contém erros" : " e não contém erros";
@@ -160,39 +171,19 @@ public class MainScreen {
                     "Limpar o jogo",
                     YES_NO_OPTION,
                     QUESTION_MESSAGE);
-            if (dialogResult == 0) {
+            if (dialogResult == YES_OPTION) {
                 boardService.reset();
-                notifierService.notify(EventEnum.CLEAR_SPACE
-);
-                elapsedSeconds = timeLimitSeconds;
-                timerLabel.setText("Tempo restante: 05:00");
-                gameTimer.restart();
-                hintsRemaining = 3;
-                hintButton.setText("Dica (3)");
+                notifierService.notify(EventEnum.CLEAR_SPACE);
+                // elapsedSeconds = timeLimitSeconds;
+                // timerLabel.setText("Tempo restante: 05:00");
+                // gameTimer.restart();
+                //hintsRemaining = 3;
+                //hintButton.setText("Dica (3)");
             }
         });
     }
 
-    private void addHintButton(JPanel mainPanel) {
-        hintButton = new JButton("Dica (" + hintsRemaining + ")");
-        hintButton.addActionListener(__ -> {
-            if (hintsRemaining <= 0) {
-                JOptionPane.showMessageDialog(null, "Você já usou todas as dicas!");
-                return;
-            }
-
-            Space hintSpace = boardService.getHint();
-            if (hintSpace != null) {
-                hintSpace.setActual(hintSpace.getExpected());
-                notifierService.notify(EventEnum.CLEAR_SPACE
-);
-                hintsRemaining--;
-                hintButton.setText("Dica (" + hintsRemaining + ")");
-            } else {
-                JOptionPane.showMessageDialog(null, "Não há mais dicas disponíveis.");
-            }
-        });
-    }
+    
 
     private void addPauseButton(JPanel mainPanel) {
         pauseButton = new JButton("⏸️ Pausar");
@@ -201,11 +192,11 @@ public class MainScreen {
                 gameTimer.start();
                 pauseButton.setText("⏸️ Pausar");
                 enableGame();
+               
             } else {
-                gameTimer.stop();
+                // gameTimer.stop();
                 pauseButton.setText("▶️ Retomar");
                 disableGame();
-                hintButton.setEnabled(false);
             }
             isPaused = !isPaused;
         });
@@ -216,8 +207,7 @@ public class MainScreen {
         undoButton.addActionListener(__ -> {
             boolean undone = boardService.undoLastMove();
             if (undone) {
-                notifierService.notify(EventEnum.CLEAR_SPACE
-);
+                notifierService.notify(EventEnum.CLEAR_SPACE);
             } else {
                 JOptionPane.showMessageDialog(null, "Nenhuma jogada para desfazer.");
             }
@@ -228,7 +218,7 @@ public class MainScreen {
         resetButton.setEnabled(false);
         checkGameStatusButton.setEnabled(false);
         finishGameButton.setEnabled(false);
-        hintButton.setEnabled(false);
+        //hintButton.setEnabled(false);
         undoButton.setEnabled(false);
     }
 
@@ -236,7 +226,13 @@ public class MainScreen {
         resetButton.setEnabled(true);
         checkGameStatusButton.setEnabled(true);
         finishGameButton.setEnabled(true);
-        hintButton.setEnabled(true);
+        //hintButton.setEnabled(true);
         undoButton.setEnabled(true);
+    }
+
+    private String formatTime(int totalSeconds) {
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        return String.format("%02d:%02d", minutes, seconds);
     }
 }

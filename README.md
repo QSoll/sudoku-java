@@ -1,3 +1,5 @@
+<img src="img1.jpg">
+
 # SUDOKU- Jogo de Tabuleiro com Interface Gráfica
 
 Desenvolvido em Java, com interface gráfica usando Swing. 
@@ -6,8 +8,25 @@ O objetivo é preencher o tabuleiro com os valores corretos, respeitando as regr
 
 Algumas células são fixas e não podem ser alteradas pelo jogador.
 
+### Como baixar o projeto para jogar com interface gráfica
 
+1. Certifique-se de que o Java está instalado no seu computador  
+   👉 [Baixar Java](https://www.java.com/pt-BR/download/)
 
+2. Baixe o arquivo `.jar` na aba [Releases](https://github.com/QSoll/sudoku-java/releases)
+
+3. Clique duas vezes no arquivo para abrir o jogo
+
+> Ao iniciar, você verá uma janela para escolher o nível de dificuldade: Fácil, Médio ou Impossível.
+
+________________________________
+
+Você pode baixar o projeto diretamente como ZIP:
+
+1. Acesse o repositório: [github.com/QSoll/sudoku-java](https://github.com/QSoll/sudoku-java)
+2. Clique no botão verde acima **Code**
+3. Selecione **Download ZIP**
+4. Extraia o arquivo e abra na sua IDE Java
 ---
 
 ## Funcionalidades iniciais já existentes

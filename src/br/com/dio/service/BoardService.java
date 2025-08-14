@@ -33,6 +33,14 @@ public class BoardService {
     public BoardService(final Map<String, String> gameConfig) {
         this.spaces = initBoard(gameConfig);
         this.board = new Board(spaces);
+
+        System.out.println("Configuração recebida: " + gameConfig);
+
+        for (String pos : gameConfig.get("positionConfig").split(";")) {
+            String valor = gameConfig.get(pos);
+            System.out.println(pos + " → " + valor);
+        }
+
     }
 
     public List<List<Space>> getSpaces() {
@@ -100,28 +108,35 @@ public class BoardService {
     private List<List<Space>> initBoard(final Map<String, String> gameConfig) {
     List<List<Space>> spaces = new ArrayList<>();
 
-    // Inicializa tabuleiro vazio
     for (int col = 0; col < BOARD_LIMIT; col++) {
-        List<Space> column = new ArrayList<>();
+        List<Space> coluna = new ArrayList<>();
         for (int row = 0; row < BOARD_LIMIT; row++) {
-            column.add(new Space(0, false)); // valor 0, não fixo
+            coluna.add(new Space(0, false));
         }
-        spaces.add(column);
+        spaces.add(coluna);
     }
 
-    // Preenche posições fixas se houver configuração
     String positionConfig = gameConfig.get("positionConfig");
     if (positionConfig != null && !positionConfig.isBlank()) {
         for (String pos : positionConfig.split(";")) {
-            if (pos.length() < 2) continue;
+            if (pos.length() < 2)
+                continue;
 
             char rowChar = Character.toUpperCase(pos.charAt(0));
-            int col = Character.getNumericValue(pos.charAt(1)) - 1;
             int row = rowChar - 'A';
+            int col = Character.getNumericValue(pos.charAt(1)) - 1;
 
             if (row >= 0 && row < BOARD_LIMIT && col >= 0 && col < BOARD_LIMIT) {
-                Space space = new Space(5, true); // valor fixo de exemplo
-                spaces.get(col).set(row, space);
+                String value = gameConfig.get(pos);
+                if (value == null || !value.contains(","))
+                    continue;
+
+                String[] parts = value.split(",");
+                int expected = Integer.parseInt(parts[0]);
+                boolean fixed = Boolean.parseBoolean(parts[1]);
+
+                Space space = new Space(expected, fixed);
+                spaces.get(col).set(row, space); // ✅ corrigido
             }
         }
     }

@@ -13,10 +13,16 @@ public class NumberTextLimit extends PlainDocument {
 
     @Override
     public void insertString(final int offs, final String str, final AttributeSet a) throws BadLocationException {
-        if (isNull(str) || (!NUMBERS.contains(str))) return;
+        if (isNull(str))
+            return;
 
-        if (getLength() + str.length() <= 1){
+        // Permite setText() com qualquer valor, mas restringe digitação manual
+        if (offs == 0 && getLength() == 0 && NUMBERS.contains(str)) {
+            super.insertString(offs, str, a);
+        } else if (getLength() > 0) {
+            // Permite setText() para campos fixos
             super.insertString(offs, str, a);
         }
     }
+
 }
